@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>自己肯定感ガチャ</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
+            background-color: #fce4ec; /* 優しいピンク背景 */
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        #app-container {
+            background-color: #fff;
+            width: 90%;
+            max-width: 400px;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        h1 {
+            color: #d81b60;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        #gacha-machine {
+            font-size: 80px;
+            margin: 20px 0;
+            transition: transform 0.1s;
+        }
+
+        .shaking {
+            animation: shake 0.5s infinite;
+        }
+
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            10% { transform: translate(-1px, -2px) rotate(-1deg); }
+            20% { transform: translate(-3px, 0px) rotate(1deg); }
+            30% { transform: translate(3px, 2px) rotate(0deg); }
+            40% { transform: translate(1px, -1px) rotate(1deg); }
+            50% { transform: translate(-1px, 2px) rotate(-1deg); }
+            60% { transform: translate(-3px, 1px) rotate(0deg); }
+            70% { transform: translate(3px, 1px) rotate(-1deg); }
+            80% { transform: translate(-1px, -1px) rotate(1deg); }
+            90% { transform: translate(1px, 2px) rotate(0deg); }
+            100% { transform: translate(1px, -2px) rotate(-1deg); }
+        }
+
+        button {
+            background-color: #ff4081;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(255, 64, 129, 0.3);
+            transition: transform 0.2s, background-color 0.2s;
+        }
+
+        button:hover:not(:disabled) {
+            background-color: #e91e63;
+            transform: translateY(-2px);
+        }
+
+        button:active:not(:disabled) {
+            transform: translateY(2px);
+            box-shadow: 0 1px 3px rgba(255, 64, 129, 0.3);
+        }
+
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        #result-area {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 15px;
+            opacity: 0;
+            transition: opacity 0.5s, transform 0.5s;
+            transform: scale(0.9);
+            min-height: 120px;
+        }
+
+        #result-area.show {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        #rarity {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        #message {
+            font-size: 18px;
+            line-height: 1.5;
+            font-weight: bold;
+        }
+
+        /* レアリティ別のスタイル */
+        .rarity-n { background-color: #f5f5f5; border: 2px solid #bdbdbd; color: #616161; }
+        .rarity-r { background-color: #e3f2fd; border: 2px solid #64b5f6; color: #1976d2; }
+        .rarity-sr { background-color: #f3e5f5; border: 2px solid #ba68c8; color: #7b1fa2; }
+        .rarity-ssr { background-color: #fff8e1; border: 2px solid #ffd54f; color: #f57f17; box-shadow: 0 0 15px rgba(255, 213, 79, 0.5); }
+        .rarity-ur { 
+            background: linear-gradient(45deg, #ff9a9e 0%, #fecfef 99%, #fecfef 100%);
+            border: 3px solid #ff4081;
+            box-shadow: 0 0 20px rgba(255, 64, 129, 0.6);
+        }
+        
+        .text-ur {
+            background: linear-gradient(to right, #f32170, #ff6b08, #cf23cf, #eedd44);
+            -webkit-text-fill-color: transparent;
+            -webkit-background-clip: text;
+            background-clip: text;
+            font-size: 22px !important;
+            animation: rainbow 3s ease-in-out infinite;
+            background-size: 400% 100%;
+        }
+
+        @keyframes rainbow {
+            0%,100% { background-position: 0 0; }
+            50% { background-position: 100% 0; }
+        }
+
+    </style>
+</head>
+<body>
+
+<div id="app-container">
+    <h1>✨ 自己肯定感ガチャ ✨</h1>
+    <p>今のあなたに必要な言葉をプレゼント</p>
+    
+    <div id="gacha-machine">🥚</div>
+    
+    <button id="spin-btn" onclick="spinGacha()">ガチャを回す (無料)</button>
+    
+    <div id="result-area">
+        <div id="rarity"></div>
+        <div id="message"></div>
+    </div>
+</div>
+
+<script>
+    // --- ガチャのデータ（レアリティ、確率ウェイト、メッセージ） ---
+    const gachaData = [
+        // UR: 超絶レア（確率 約5%）
+        { rarity: 'UR', weight: 5, className: 'rarity-ur', textClass: 'text-ur', 
+          messages: [
+              "生きているだけで100点満点！あなたは宇宙でたった一人の大傑作です！",
+              "過去も現在も未来も、あなたの全てが素晴らしい！堂々と胸を張って！",
+              "AIの私から見ても、あなたの存在価値は測定不能なほど高いです！"
+          ]
+        },
+        // SSR: かなりレア（確率 約15%）
+        { rarity: 'SSR', weight: 15, className: 'rarity-ssr', textClass: '',
+          messages: [
+              "失敗した？それは挑戦した証拠！あなたには確実に経験値が貯まっています。",
+              "あなたの優しさは、あなたが思っている以上に誰かを救っていますよ。",
+              "無理して笑わなくていい。ありのままのあなたが一番魅力的です。"
+          ]
+        },
+        // SR: レア（確率 約30%）
+        { rarity: 'SR', weight: 30, className: 'rarity-sr', textClass: '',
+          messages: [
+              "人と比べなくて大丈夫。あなたのペースで進むのが一番早い道だから。",
+              "今日も1日、自分の心と体を動かしてえらい！拍手！",
+              "ちょっと休んでも大丈夫。休むことも立派な「行動」です。"
+          ]
+        },
+        // R: 少しレア（確率 約30%）
+        { rarity: 'R', weight: 30, className: 'rarity-r', textClass: '',
+          messages: [
+              "ちゃんと息をしていて素晴らしい！基本が一番大事です。",
+              "美味しいものを食べて、たくさん寝ましょう。あなたにはその権利があります。",
+              "あなたの好きなものは、あなたを形作る素敵な一部です。"
+          ]
+        },
+        // N: ノーマル（確率 約20%）
+        { rarity: 'N', weight: 20, className: 'rarity-n', textClass: '',
+          messages: [
+              "今日も一日お疲れ様でした。",
+              "まずは深呼吸。スゥーーー、ハァーーー。",
+              "とりあえず、温かいお茶でも飲みませんか？"
+          ]
+        }
+    ];
+
+    const spinBtn = document.getElementById('spin-btn');
+    const machine = document.getElementById('gacha-machine');
+    const resultArea = document.getElementById('result-area');
+    const rarityDisplay = document.getElementById('rarity');
+    const messageDisplay = document.getElementById('message');
+
+    // --- ガチャを引くロジック ---
+    function spinGacha() {
+        // ボタン連打防止
+        spinBtn.disabled = true;
+        
+        // 結果エリアを隠してカプセルの演出
+        resultArea.className = '';
+        machine.textContent = '🥚';
+        machine.classList.add('shaking');
+
+        // 演出時間（1.2秒）の後に結果を表示
+        setTimeout(() => {
+            machine.classList.remove('shaking');
+            machine.textContent = '🌟'; // カプセルが開いた表現
+            showResult();
+            spinBtn.disabled = false;
+        }, 1200);
+    }
+
+    // --- 結果の抽選と表示 ---
+    function showResult() {
+        // ウェイト（重み）の合計を計算
+        const totalWeight = gachaData.reduce((sum, item) => sum + item.weight, 0);
+        
+        // ランダムな値を生成（0 〜 totalWeight未満）
+        let randomValue = Math.random() * totalWeight;
+        let selectedTier = gachaData[gachaData.length - 1]; // フォールバック
+
+        // どのレアリティに当選したか判定
+        for (const tier of gachaData) {
+            if (randomValue < tier.weight) {
+                selectedTier = tier;
+                break;
+            }
+            randomValue -= tier.weight;
+        }
+
+        // 該当レアリティの中からランダムにメッセージを1つ選ぶ
+        const messageIndex = Math.floor(Math.random() * selectedTier.messages.length);
+        const selectedMessage = selectedTier.messages[messageIndex];
+
+        // 画面に表示
+        resultArea.className = `show ${selectedTier.className}`;
+        rarityDisplay.textContent = `【 ${selectedTier.rarity} 】`;
+        
+        messageDisplay.className = selectedTier.textClass;
+        messageDisplay.textContent = selectedMessage;
+    }
+</script>
+
+</body>
+</html>
